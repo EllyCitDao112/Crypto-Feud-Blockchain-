@@ -4,15 +4,16 @@
   <title>Crypto Feud - Web3 Game</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; text-align: center; padding: 20px; }
-    #game-container { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: none; }
-    .team { margin: 15px; padding: 20px; background: #e3f2fd; border-radius: 8px; font-size: 20px; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; background: #f0f8ff; text-align: center; padding: 20px; }
+    #game-container { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: none; margin-top: 20px; }
+    .team { margin: 15px; padding: 20px; background: #e0f7fa; border-radius: 8px; font-size: 20px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; }
   </style>
 </head>
 <body>
   <h1>🎮 Crypto Feud - Web3 Arena</h1>
   <button onclick="connectWallet()">🔐 Connect Wallet</button>
+  <button onclick="playAsGuest()">🎯 Play as Guest</button>
   <p id="wallet-address"></p>
 
   <div id="game-container">
@@ -24,6 +25,7 @@
   <script>
     let provider, signer, userWallet;
     let scoreA = 0, scoreB = 0;
+    let walletConnected = false;
 
     async function connectWallet() {
       if (window.ethereum) {
@@ -31,24 +33,5 @@
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userWallet = await signer.getAddress();
-        document.getElementById("wallet-address").innerText = "✅ Connected: " + userWallet;
-        document.getElementById("game-container").style.display = "block";
-      } else {
-        alert("⚠️ Please install MetaMask to continue.");
-      }
-    }
-
-    function simulateRound() {
-      const winner = Math.random() > 0.5 ? "A" : "B";
-      if (winner === "A") {
-        scoreA += 10;
-        document.getElementById("scoreA").innerText = scoreA;
-      } else {
-        scoreB += 10;
-        document.getElementById("scoreB").innerText = scoreB;
-      }
-      alert(`🏆 Round Winner: Team ${winner === "A" ? "Alpha" : "Beta"}`);
-    }
-  </script>
-</body>
-</html>
+        walletConnected = true;
+        document.getElementById("wallet-address").innerText
