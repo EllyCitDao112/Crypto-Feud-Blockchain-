@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Feud - Web3 Game</title>
+  <style>
+    body {
+      background-color: #111;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 48px;
+      color: #f9a825;
+    }
+
+    .question-board {
+      background-color: #222;
+      border: 3px solid #f9a825;
+      padding: 20px;
+      margin: 20px auto;
+      width: 80%;
+      border-radius: 10px;
+    }
+
+    .answer {
+      background-color: #333;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .answer.revealed {
+      background-color: #2e7d32;
+      color: #fff;
+    }
+
+    #connectBtn {
+      background-color: #f9a825;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 Crypto Feud 🎮</h1>
+  <p>Inspired by Family Feud – Web3 Edition!</p>
+
+  <button id="connectBtn">Connect Wallet</button>
+
+  <div class="question-board">
+    <h2>We asked 100 crypto users... 💭</h2>
+    <p><strong>“What’s the most trusted crypto wallet?”</strong></p>
+
+    <div class="answer" onclick="revealAnswer(this, 'MetaMask')">1. ********</div>
+    <div class="answer" onclick="revealAnswer(this, 'Trust Wallet')">2. ********</div>
+    <div class="answer" onclick="revealAnswer(this, 'Ledger Nano')">3. ********</div>
+    <div class="answer" onclick="revealAnswer(this, 'Coinbase Wallet')">4. ********</div>
+  </div>
+
+  <script>
+    // Reveal answer on click
+    function revealAnswer(el, text) {
+      if (!el.classList.contains("revealed")) {
+        el.classList.add("revealed");
+        el.textContent = text;
+      }
+    }
+
+    // Simulate Web3 wallet connection
+    const connectBtn = document.getElementById('connectBtn');
+    connectBtn.onclick = async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          connectBtn.textContent = 'Connected: ' + accounts[0].slice(0, 6) + '...';
+          connectBtn.disabled = true;
+        } catch (error) {
+          alert('Connection failed.');
+        }
+      } else {
+        alert('MetaMask or a Web3 wallet is required.');
+      }
+    };
+  </script>
+</body>
+</html>
