@@ -31,9 +31,15 @@
     <button onclick="startRound()">🔥 Play Round</button>
   </div>
 
-  <audio id="buzzSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-  <audio id="timerSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
-  <audio id="correctSound" src="https://www.soundjay.com/button/button-4.wav"></audio>
+  <audio id="buzzSound">
+    <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+  </audio>
+  <audio id="timerSound">
+    <source src="https://www.soundjay.com/button/beep-09.wav" type="audio/wav">
+  </audio>
+  <audio id="correctSound">
+    <source src="https://www.soundjay.com/button/button-4.wav" type="audio/wav">
+  </audio>
 
   <script>
     let provider, signer, userWallet;
@@ -41,6 +47,8 @@
     let currentQuestionIndex = 0;
     let timer;
     let isBuzzed = false;
+    let teamBuzzed = null;
+    let selectedAnswers = [];
 
     const questions = [
       {
@@ -90,6 +98,8 @@
 
     function startRound() {
       isBuzzed = false;
+      teamBuzzed = null;
+      selectedAnswers = [];
       document.getElementById("teamA").classList.remove("buzzed");
       document.getElementById("teamB").classList.remove("buzzed");
       const questionData = questions[currentQuestionIndex];
@@ -111,49 +121,48 @@
     }
 
     function selectAnswer(element, answer) {
-      const alreadySelected = element.classList.contains("selected");
-      if (alreadySelected) return;
+      if (!teamBuzzed) return alert("Buzz in first!");
+      if (element.classList.contains("selected")) return;
       element.classList.add("selected");
+      selectedAnswers.push(answer);
       if (answer.correct) {
         document.getElementById("correctSound").play();
-        addScoreToMostSelectedTeam();
       }
     }
 
     function buzz(team) {
       if (isBuzzed) return;
       isBuzzed = true;
+      teamBuzzed = team;
       document.getElementById("buzzSound").play();
       document.getElementById("team" + team).classList.add("buzzed");
     }
 
-    function addScoreToMostSelectedTeam() {
-      // Placeholder logic: alternate scores for demonstration.
-      const team = Math.random() > 0.5 ? 'A' : 'B';
-      let points = Math.floor(Math.random() * 100) + 1;
-      if (team === 'A') {
-        scoreA += points;
+    function calculateScore() {
+      let correctCount = selectedAnswers.filter(a => a.correct).length;
+      let score = Math.floor((correctCount / 10) * 100);
+      if (teamBuzzed === 'A') {
+        scoreA += score;
         document.getElementById("scoreA").innerText = scoreA;
-      } else {
-        scoreB += points;
+      } else if (teamBuzzed === 'B') {
+        scoreB += score;
         document.getElementById("scoreB").innerText = scoreB;
       }
-      currentQuestionIndex++;
+      currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
     }
 
     function startTimer() {
       let timeLeft = 10;
       const timerElement = document.getElementById("timer");
-      timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
       document.getElementById("timerSound").play();
-
+      timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
       timer = setInterval(() => {
         timeLeft--;
         timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
         if (timeLeft <= 0) {
           clearInterval(timer);
           timerElement.innerText = "⏱️ Time's up!";
-          currentQuestionIndex++;
+          calculateScore();
         }
       }, 1000);
     }
