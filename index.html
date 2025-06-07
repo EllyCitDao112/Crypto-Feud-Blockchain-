@@ -6,8 +6,10 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f0f8ff; text-align: center; padding: 20px; }
     #game-container { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: none; margin-top: 20px; }
-    .team { margin: 15px; padding: 20px; background: #e0f7fa; border-radius: 8px; font-size: 20px; }
+    .team { margin: 15px; padding: 20px; background: #e0f7fa; border-radius: 8px; font-size: 20px; transition: transform 0.3s ease-in-out; }
+    .team.buzzed { background: #c8e6c9; transform: scale(1.1); }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; }
+    #timer { font-size: 24px; margin-top: 15px; color: #d32f2f; }
   </style>
 </head>
 <body>
@@ -17,16 +19,22 @@
   <p id="wallet-address"></p>
 
   <div id="game-container">
-    <div class="team" id="teamA">Team Alpha Score: <span id="scoreA">0</span></div>
-    <div class="team" id="teamB">Team Beta Score: <span id="scoreB">0</span></div>
+    <div class="team" id="teamA" onclick="buzz('A')">Team Alpha Score: <span id="scoreA">0</span></div>
+    <div class="team" id="teamB" onclick="buzz('B')">Team Beta Score: <span id="scoreB">0</span></div>
     <h3 id="question">Press "Play Round" to start</h3>
-    <button onclick="simulateRound()">🔥 Play Round</button>
+    <div id="timer"></div>
+    <button onclick="startRound()">🔥 Play Round</button>
   </div>
+
+  <audio id="buzzSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+  <audio id="timerSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
 
   <script>
     let provider, signer, userWallet;
     let scoreA = 0, scoreB = 0;
     let currentQuestionIndex = 0;
+    let timer;
+    let isBuzzed = false;
 
     const questions = [
       "What is the most popular cryptocurrency?",
@@ -59,25 +67,57 @@
       document.getElementById("game-container").style.display = "block";
     }
 
-    function simulateRound() {
+    function startRound() {
+      isBuzzed = false;
+      document.getElementById("teamA").classList.remove("buzzed");
+      document.getElementById("teamB").classList.remove("buzzed");
       const questionElement = document.getElementById("question");
+
       if (currentQuestionIndex < questions.length) {
         questionElement.innerText = questions[currentQuestionIndex];
-        let team = Math.random() > 0.5 ? 'A' : 'B';
-        let points = Math.floor(Math.random() * 100) + 1;
-
-        if (team === 'A') {
-          scoreA += points;
-          document.getElementById("scoreA").innerText = scoreA;
-        } else {
-          scoreB += points;
-          document.getElementById("scoreB").innerText = scoreB;
-        }
-
-        currentQuestionIndex++;
+        startTimer();
       } else {
         questionElement.innerText = "Game Over!";
       }
+    }
+
+    function buzz(team) {
+      if (isBuzzed) return;
+      isBuzzed = true;
+      document.getElementById("buzzSound").play();
+      document.getElementById("team" + team).classList.add("buzzed");
+      addScore(team);
+      clearTimeout(timer);
+      document.getElementById("timer").innerText = "";
+    }
+
+    function addScore(team) {
+      let points = Math.floor(Math.random() * 100) + 1;
+      if (team === 'A') {
+        scoreA += points;
+        document.getElementById("scoreA").innerText = scoreA;
+      } else {
+        scoreB += points;
+        document.getElementById("scoreB").innerText = scoreB;
+      }
+      currentQuestionIndex++;
+    }
+
+    function startTimer() {
+      let timeLeft = 10;
+      const timerElement = document.getElementById("timer");
+      timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
+      document.getElementById("timerSound").play();
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timerElement.innerText = "⏱️ Time's up!";
+          currentQuestionIndex++;
+        }
+      }, 1000);
     }
   </script>
 </body>
