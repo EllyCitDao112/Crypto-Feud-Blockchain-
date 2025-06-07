@@ -10,6 +10,10 @@
     .team.buzzed { background: #c8e6c9; transform: scale(1.1); }
     button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; }
     #timer { font-size: 24px; margin-top: 15px; color: #d32f2f; }
+    .answers { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; }
+    .answer-option { background: #ffe082; padding: 10px 15px; margin: 5px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+    .answer-option:hover { background: #ffca28; transform: scale(1.1); }
+    .answer-option.selected { background: #aed581; }
   </style>
 </head>
 <body>
@@ -23,11 +27,13 @@
     <div class="team" id="teamB" onclick="buzz('B')">Team Beta Score: <span id="scoreB">0</span></div>
     <h3 id="question">Press "Play Round" to start</h3>
     <div id="timer"></div>
+    <div class="answers" id="answers"></div>
     <button onclick="startRound()">🔥 Play Round</button>
   </div>
 
   <audio id="buzzSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
   <audio id="timerSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
+  <audio id="correctSound" src="https://www.soundjay.com/button/button-4.wav"></audio>
 
   <script>
     let provider, signer, userWallet;
@@ -37,16 +43,31 @@
     let isBuzzed = false;
 
     const questions = [
-      "What is the most popular cryptocurrency?",
-      "Name something stored in a crypto wallet.",
-      "What’s a risk of crypto trading?",
-      "Name a use of blockchain tech.",
-      "Best time to buy crypto?",
-      "What’s a crypto term that sounds like food?",
-      "Name a decentralized app (dApp) use.",
-      "Which blockchain is known for NFTs?",
-      "What’s a term for price drop?",
-      "Which is a proof-of-stake coin?"
+      {
+        question: "What is the most popular cryptocurrency?",
+        answers: [
+          { text: "Bitcoin", correct: true },
+          { text: "Ethereum", correct: true },
+          { text: "Dogecoin", correct: true },
+          { text: "Litecoin", correct: true },
+          { text: "Solana", correct: true },
+          { text: "Cardano", correct: true },
+          { text: "Ripple", correct: true },
+          { text: "Binance Coin", correct: true },
+          { text: "Polkadot", correct: true },
+          { text: "Shiba Inu", correct: true },
+          { text: "Tether", correct: false },
+          { text: "USDC", correct: false },
+          { text: "EOS", correct: false },
+          { text: "TRON", correct: false },
+          { text: "Dash", correct: false },
+          { text: "Zcash", correct: false },
+          { text: "Monero", correct: false },
+          { text: "NEO", correct: false },
+          { text: "Tezos", correct: false },
+          { text: "VeChain", correct: false }
+        ]
+      }
     ];
 
     async function connectWallet() {
@@ -71,13 +92,31 @@
       isBuzzed = false;
       document.getElementById("teamA").classList.remove("buzzed");
       document.getElementById("teamB").classList.remove("buzzed");
-      const questionElement = document.getElementById("question");
+      const questionData = questions[currentQuestionIndex];
+      document.getElementById("question").innerText = questionData.question;
+      renderAnswers(questionData.answers);
+      startTimer();
+    }
 
-      if (currentQuestionIndex < questions.length) {
-        questionElement.innerText = questions[currentQuestionIndex];
-        startTimer();
-      } else {
-        questionElement.innerText = "Game Over!";
+    function renderAnswers(answers) {
+      const answersContainer = document.getElementById("answers");
+      answersContainer.innerHTML = "";
+      answers.forEach((ans, index) => {
+        const div = document.createElement("div");
+        div.className = "answer-option";
+        div.innerText = ans.text;
+        div.onclick = () => selectAnswer(div, ans);
+        answersContainer.appendChild(div);
+      });
+    }
+
+    function selectAnswer(element, answer) {
+      const alreadySelected = element.classList.contains("selected");
+      if (alreadySelected) return;
+      element.classList.add("selected");
+      if (answer.correct) {
+        document.getElementById("correctSound").play();
+        addScoreToMostSelectedTeam();
       }
     }
 
@@ -86,12 +125,11 @@
       isBuzzed = true;
       document.getElementById("buzzSound").play();
       document.getElementById("team" + team).classList.add("buzzed");
-      addScore(team);
-      clearTimeout(timer);
-      document.getElementById("timer").innerText = "";
     }
 
-    function addScore(team) {
+    function addScoreToMostSelectedTeam() {
+      // Placeholder logic: alternate scores for demonstration.
+      const team = Math.random() > 0.5 ? 'A' : 'B';
       let points = Math.floor(Math.random() * 100) + 1;
       if (team === 'A') {
         scoreA += points;
