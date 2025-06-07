@@ -19,13 +19,27 @@
   <div id="game-container">
     <div class="team" id="teamA">Team Alpha Score: <span id="scoreA">0</span></div>
     <div class="team" id="teamB">Team Beta Score: <span id="scoreB">0</span></div>
+    <h3 id="question">Press "Play Round" to start</h3>
     <button onclick="simulateRound()">🔥 Play Round</button>
   </div>
 
   <script>
     let provider, signer, userWallet;
     let scoreA = 0, scoreB = 0;
-    let walletConnected = false;
+    let currentQuestionIndex = 0;
+
+    const questions = [
+      "What is the most popular cryptocurrency?",
+      "Name something stored in a crypto wallet.",
+      "What’s a risk of crypto trading?",
+      "Name a use of blockchain tech.",
+      "Best time to buy crypto?",
+      "What’s a crypto term that sounds like food?",
+      "Name a decentralized app (dApp) use.",
+      "Which blockchain is known for NFTs?",
+      "What’s a term for price drop?",
+      "Which is a proof-of-stake coin?"
+    ];
 
     async function connectWallet() {
       if (window.ethereum) {
@@ -33,5 +47,38 @@
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userWallet = await signer.getAddress();
-        walletConnected = true;
-        document.getElementById("wallet-address").innerText
+        document.getElementById("wallet-address").innerText = "Wallet: " + userWallet;
+        document.getElementById("game-container").style.display = "block";
+      } else {
+        alert("MetaMask not detected. Please install MetaMask.");
+      }
+    }
+
+    function playAsGuest() {
+      document.getElementById("wallet-address").innerText = "Playing as Guest";
+      document.getElementById("game-container").style.display = "block";
+    }
+
+    function simulateRound() {
+      const questionElement = document.getElementById("question");
+      if (currentQuestionIndex < questions.length) {
+        questionElement.innerText = questions[currentQuestionIndex];
+        let team = Math.random() > 0.5 ? 'A' : 'B';
+        let points = Math.floor(Math.random() * 100) + 1;
+
+        if (team === 'A') {
+          scoreA += points;
+          document.getElementById("scoreA").innerText = scoreA;
+        } else {
+          scoreB += points;
+          document.getElementById("scoreB").innerText = scoreB;
+        }
+
+        currentQuestionIndex++;
+      } else {
+        questionElement.innerText = "Game Over!";
+      }
+    }
+  </script>
+</body>
+</html>
