@@ -1,3 +1,4 @@
+// updated HTML and JS code to allow Team B a chance to win the round after 3 incorrect answers by Team A
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,7 +14,8 @@
     .answers { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; }
     .answer-option { background: #ffe082; padding: 10px 15px; margin: 5px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
     .answer-option:hover { background: #ffca28; transform: scale(1.1); }
-    .answer-option.selected { background: #aed581; }
+    .answer-option.selected-a { background: #aed581; }
+    .answer-option.selected-b { background: #81d4fa; }
   </style>
 </head>
 <body>
@@ -23,8 +25,8 @@
   <p id="wallet-address"></p>
 
   <div id="game-container">
-    <div class="team" id="teamA" onclick="buzz('A')">Team Alpha Score: <span id="scoreA">0</span></div>
-    <div class="team" id="teamB" onclick="buzz('B')">Team Beta Score: <span id="scoreB">0</span></div>
+    <div class="team" id="teamA">Team Alpha Score: <span id="scoreA">0</span></div>
+    <div class="team" id="teamB">Team Beta Score: <span id="scoreB">0</span></div>
     <h3 id="question">Press "Play Round" to start</h3>
     <div id="timer"></div>
     <div class="answers" id="answers"></div>
@@ -46,9 +48,10 @@
     let scoreA = 0, scoreB = 0;
     let currentQuestionIndex = 0;
     let timer;
-    let isBuzzed = false;
-    let teamBuzzed = null;
-    let selectedAnswers = [];
+    let countdownTime = 10;
+    let teamAAnswers = [], teamBAnswers = [];
+    let incorrectA = 0;
+    let teamTurn = 'A';
 
     const questions = [
       {
@@ -97,62 +100,68 @@
     }
 
     function startRound() {
-      isBuzzed = false;
-      teamBuzzed = null;
-      selectedAnswers = [];
-      document.getElementById("teamA").classList.remove("buzzed");
-      document.getElementById("teamB").classList.remove("buzzed");
+      teamAAnswers = [];
+      teamBAnswers = [];
+      incorrectA = 0;
+      teamTurn = 'A';
+      clearInterval(timer);
       const questionData = questions[currentQuestionIndex];
       document.getElementById("question").innerText = questionData.question;
       renderAnswers(questionData.answers);
+      document.getElementById("timer").innerText = `Team A's Turn!`;
       startTimer();
     }
 
     function renderAnswers(answers) {
       const answersContainer = document.getElementById("answers");
       answersContainer.innerHTML = "";
-      answers.forEach((ans, index) => {
+      answers.forEach((ans) => {
         const div = document.createElement("div");
         div.className = "answer-option";
         div.innerText = ans.text;
-        div.onclick = () => selectAnswer(div, ans);
+        div.onclick = () => {
+          if (teamTurn === 'A' && !teamAAnswers.includes(ans)) {
+            teamAAnswers.push(ans);
+            div.classList.add("selected-a");
+            if (ans.correct) {
+              document.getElementById("correctSound").play();
+            } else {
+              incorrectA++;
+              if (incorrectA >= 3) {
+                teamTurn = 'B';
+                document.getElementById("timer").innerText = `Team B gets a chance!`;
+                return;
+              }
+            }
+          } else if (teamTurn === 'B' && !teamBAnswers.includes(ans)) {
+            teamBAnswers.push(ans);
+            div.classList.add("selected-b");
+            if (ans.correct) {
+              document.getElementById("correctSound").play();
+            }
+          }
+        };
         answersContainer.appendChild(div);
       });
     }
 
-    function selectAnswer(element, answer) {
-      if (!teamBuzzed) return alert("Buzz in first!");
-      if (element.classList.contains("selected")) return;
-      element.classList.add("selected");
-      selectedAnswers.push(answer);
-      if (answer.correct) {
-        document.getElementById("correctSound").play();
-      }
-    }
-
-    function buzz(team) {
-      if (isBuzzed) return;
-      isBuzzed = true;
-      teamBuzzed = team;
-      document.getElementById("buzzSound").play();
-      document.getElementById("team" + team).classList.add("buzzed");
-    }
-
     function calculateScore() {
-      let correctCount = selectedAnswers.filter(a => a.correct).length;
-      let score = Math.floor((correctCount / 10) * 100);
-      if (teamBuzzed === 'A') {
-        scoreA += score;
-        document.getElementById("scoreA").innerText = scoreA;
-      } else if (teamBuzzed === 'B') {
-        scoreB += score;
-        document.getElementById("scoreB").innerText = scoreB;
+      const correctA = teamAAnswers.filter(a => a.correct).length;
+      const correctB = teamBAnswers.filter(a => a.correct).length;
+      const scoreAIncrement = Math.floor((correctA / 10) * 100);
+      const scoreBIncrement = Math.floor((correctB / 10) * 100);
+      if (teamTurn === 'A' || incorrectA < 3) {
+        scoreA += scoreAIncrement;
+      } else {
+        scoreB += scoreBIncrement;
       }
+      document.getElementById("scoreA").innerText = scoreA;
+      document.getElementById("scoreB").innerText = scoreB;
       currentQuestionIndex = (currentQuestionIndex + 1) % questions.length;
     }
 
     function startTimer() {
-      let timeLeft = 10;
+      let timeLeft = countdownTime;
       const timerElement = document.getElementById("timer");
       document.getElementById("timerSound").play();
       timerElement.innerText = `⏱️ ${timeLeft} seconds remaining...`;
